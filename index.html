@@ -7,8 +7,12 @@
     body {
         background-color: #f0fdf4;
         font-family: Arial, sans-serif;
-        text-align: center;
-        margin-top: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
     }
     #lizardButton {
         background-color: #a7f3d0;
@@ -37,7 +41,8 @@
 <button id="lizardButton">🦎</button>
 <div id="counter">Pressed: 0</div>
 
-<audio id="lizardSound" src="Lizard.mp3" preload="auto"></audio>
+<!-- Update path if audio is in "audio" folder -->
+<audio id="lizardSound" src="audio/Lizard.mp3" preload="auto"></audio>
 
 <script>
     const button = document.getElementById('lizardButton');
@@ -50,7 +55,9 @@
         count++;
         counterDisplay.textContent = `Pressed: ${count}`;
         lizardSound.currentTime = 0; // restart sound if pressed quickly
-        lizardSound.play();
+        lizardSound.play().catch(err => {
+            console.warn('Audio playback prevented:', err);
+        });
     });
 </script>
 
