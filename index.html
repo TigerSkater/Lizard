@@ -1,150 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="UTF-8">
 <title>Lizard Button</title>
 <style>
-  :root{
-    --bg: #ccffcc;       /* light green background */
-    --btn-size: 140px;
-  }
-
-  html,body{
-    height:100%;
-    margin:0;
-  }
-
-  body {
-    background-color: var(--bg);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    gap:20px;
-    padding:40px;
-    box-sizing:border-box;
-  }
-
-  /* Realistic glossy circular button */
-  #lizardButton{
-    width: var(--btn-size);
-    height: var(--btn-size);
-    border-radius: 50%;
-    border: 2px solid rgba(0,0,0,0.08);
-    background:
-      radial-gradient(circle at 30% 25%, rgba(255,255,255,0.95), rgba(255,255,255,0.9) 10%),
-      linear-gradient(#ffffff, #f0f0f0 60%, #e7e7e7);
-    box-shadow:
-      inset 0 18px 28px rgba(255,255,255,0.6),
-      inset 0 -8px 12px rgba(0,0,0,0.06),
-      0 18px 30px rgba(0,0,0,0.18);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:64px;
-    cursor:pointer;
-    transition: transform 0.08s ease, box-shadow 0.08s ease;
-    user-select:none;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-
-  /* "Pressed" visual state (triggered by JS) */
-  #lizardButton.pressed{
-    transform: translateY(6px) scale(0.995);
-    box-shadow:
-      inset 0 6px 10px rgba(0,0,0,0.10),
-      0 6px 10px rgba(0,0,0,0.12);
-  }
-
-  /* Focus accessibility */
-  #lizardButton:focus{
-    outline: 3px solid rgba(0,150,0,0.15);
-    outline-offset: 3px;
-  }
-
-  #counter{
-    font-size:20px;
-    color:#0a5b0a;
-  }
-
-  .sr-only{
-    position:absolute;
-    width:1px;
-    height:1px;
-    padding:0;
-    margin:-1px;
-    overflow:hidden;
-    clip:rect(0,0,0,0);
-    white-space:nowrap;
-    border:0;
-  }
+    body {
+        background-color: #f0fdf4;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin-top: 100px;
+    }
+    #lizardButton {
+        background-color: #a7f3d0;
+        border: none;
+        border-radius: 50%;
+        width: 120px;
+        height: 120px;
+        font-size: 50px;
+        cursor: pointer;
+        box-shadow: 0 5px #059669;
+        transition: transform 0.1s, box-shadow 0.1s;
+    }
+    #lizardButton:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px #059669;
+    }
+    #counter {
+        font-size: 24px;
+        margin-top: 20px;
+        color: #065f46;
+    }
 </style>
 </head>
 <body>
 
-<!-- Button with lizard emoji -->
-<button id="lizardButton" aria-pressed="false" title="Press to hear 'lizard'">
-  🦎
-</button>
+<button id="lizardButton">🦎</button>
+<div id="counter">Pressed: 0</div>
 
-<!-- Live counter for screen readers -->
-<div id="counter" aria-live="polite">Pressed: 0</div>
-
-<!-- Audio element: load from audio/ folder -->
-<audio id="lizardSound" src="audio/lizard.mp3" preload="auto"></audio>
+<audio id="lizardSound" src="Lizard.mp3" preload="auto"></audio>
 
 <script>
-  const btn = document.getElementById('lizardButton');
-  const audio = document.getElementById('lizardSound');
-  const counterDisplay = document.getElementById('counter');
+    const button = document.getElementById('lizardButton');
+    const counterDisplay = document.getElementById('counter');
+    const lizardSound = document.getElementById('lizardSound');
 
-  let count = 0;
-  let pressTimeout = null;
+    let count = 0;
 
-  // Press handler that visually "presses" the button briefly and increments counter
-  function handlePress() {
-    // Increase counter and update display
-    count++;
-    counterDisplay.textContent = `Pressed: ${count}`;
-    btn.setAttribute('aria-pressed', 'true');
-
-    // Restart audio quickly if pressed many times
-    try {
-      audio.currentTime = 0;
-      // Play returns a promise in modern browsers — ignore errors (autoplay policies)
-      audio.play().catch(() => {/* user gesture required or other issue */});
-    } catch (e) { /* ignore */ }
-
-    // Add pressed class to show visual depress
-    btn.classList.add('pressed');
-
-    // Clear any previous timeout and schedule un-press
-    if (pressTimeout) clearTimeout(pressTimeout);
-    pressTimeout = setTimeout(() => {
-      btn.classList.remove('pressed');
-      btn.setAttribute('aria-pressed', 'false');
-    }, 120); // 120ms pressed look (short and snappy)
-  }
-
-  // Support mouse click, keyboard (Enter/Space), and touch
-  btn.addEventListener('click', handlePress);
-
-  btn.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' || e.code === 'Enter') {
-      e.preventDefault();
-      handlePress();
-    }
-  });
-
-  // Optional: improve responsiveness on touch devices
-  btn.addEventListener('touchstart', (e) => {
-    // prevent double handling (touch -> click)
-    e.preventDefault();
-    handlePress();
-  }, {passive:false});
+    button.addEventListener('click', () => {
+        count++;
+        counterDisplay.textContent = `Pressed: ${count}`;
+        lizardSound.currentTime = 0; // restart sound if pressed quickly
+        lizardSound.play();
+    });
 </script>
 
 </body>
