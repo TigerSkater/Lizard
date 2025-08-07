@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lizard Button</title>
+<style>
+    body {
+        background-color: #f0fdf4;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin-top: 100px;
+    }
+    #lizardButton {
+        background-color: #a7f3d0;
+        border: none;
+        border-radius: 50%;
+        width: 120px;
+        height: 120px;
+        font-size: 50px;
+        cursor: pointer;
+        box-shadow: 0 5px #059669;
+        transition: transform 0.1s, box-shadow 0.1s;
+    }
+    #lizardButton:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px #059669;
+    }
+    #counter {
+        font-size: 24px;
+        margin-top: 20px;
+        color: #065f46;
+    }
+</style>
+</head>
+<body>
+
+<button id="lizardButton">🦎</button>
+<div id="counter">Pressed: 0</div>
+
+<audio id="lizardSound" src="lizard.mp3" preload="auto"></audio>
+
+<script>
+    const button = document.getElementById('lizardButton');
+    const counterDisplay = document.getElementById('counter');
+    const lizardSound = document.getElementById('lizardSound');
+
+    let count = 0;
+
+    button.addEventListener('click', () => {
+        count++;
+        counterDisplay.textContent = `Pressed: ${count}`;
+        lizardSound.currentTime = 0; // restart sound if pressed quickly
+        lizardSound.play();
+    });
+</script>
+
+</body>
+</html>
