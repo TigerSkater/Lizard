@@ -1,95 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Lizard Button</title>
 <style>
-    body {
-        background-color: #f0fdf4;
-        font-family: Arial, sans-serif;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
+  body {
+    background-color: #f0fdf4;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
 
-        /* Faint lizard background */
-        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><text x='0' y='40' font-size='40' fill='rgba(0,0,0,0.1)'>🦎</text></svg>");
-        background-size: 60px 60px;
-        background-repeat: repeat;
-    }
+    /* Improved faint lizard background for iOS */
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><text x='0' y='40' font-size='40' fill='black' opacity='0.1'>🦎</text></svg>");
+    background-size: 60px 60px;
+    background-repeat: repeat;
+  }
 
+  #lizardButton {
+    background-color: #a7f3d0;
+    border: none;
+    border-radius: 50%;
+    width: 160px;
+    height: 160px;
+    font-size: 70px;
+    cursor: pointer;
+    box-shadow: 0 6px #059669;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on iOS */
+  }
+
+  /* Active or zoomed effect */
+  #lizardButton:active,
+  #lizardButton.zoomed {
+    transform: scale(1.1) translateY(4px);
+    box-shadow: 0 3px #059669;
+  }
+
+  #counter {
+    font-size: 28px;
+    margin-top: 20px;
+    color: #065f46;
+    user-select: none;
+  }
+
+  @media (max-width: 768px) {
     #lizardButton {
-        background-color: #a7f3d0; /* Solid button */
-        border: none;
-        border-radius: 50%;
-        width: 160px;
-        height: 160px;
-        font-size: 70px;
-        cursor: pointer;
-        box-shadow: 0 6px #059669;
-        transition: transform 0.1s ease, box-shadow 0.1s ease;
+      width: 200px;
+      height: 200px;
+      font-size: 90px;
     }
-
-    /* Button pressed styles, including zoom */
-    #lizardButton:active,
-    #lizardButton.zoomed {
-        transform: scale(1.1) translateY(4px);
-        box-shadow: 0 3px #059669;
-    }
-
-    #counter {
-        font-size: 28px;
-        margin-top: 20px;
-        color: #065f46;
-    }
-
-    /* Make button bigger on small screens (iOS) */
-    @media (max-width: 768px) {
-        #lizardButton {
-            width: 200px;
-            height: 200px;
-            font-size: 90px;
-        }
-    }
+  }
 </style>
 </head>
 <body>
 
-<button id="lizardButton">🦎</button>
-<div id="counter">Pressed: 0</div>
+<button id="lizardButton" aria-label="Lizard button">🦎</button>
+<div id="counter" aria-live="polite">Pressed: 0</div>
 
 <audio id="lizardSound" src="audio/Lizard.mp3" preload="auto"></audio>
 
 <script>
-    const button = document.getElementById('lizardButton');
-    const counterDisplay = document.getElementById('counter');
-    const lizardSound = document.getElementById('lizardSound');
+  const button = document.getElementById('lizardButton');
+  const counterDisplay = document.getElementById('counter');
+  const lizardSound = document.getElementById('lizardSound');
 
-    let count = 0;
+  let count = 0;
 
-    button.addEventListener('click', () => {
-        count++;
-        counterDisplay.textContent = `Pressed: ${count}`;
+  button.addEventListener('click', () => {
+    count++;
+    counterDisplay.textContent = `Pressed: ${count}`;
 
-        // Clone the audio node so multiple presses can overlap
-        const soundClone = lizardSound.cloneNode(true);
-        soundClone.play().catch(err => {
-            console.warn('Audio playback prevented:', err);
-        });
+    const soundClone = lizardSound.cloneNode(true);
+    soundClone.play().catch(err => {
+      console.warn('Audio playback prevented:', err);
     });
+  });
 
-    // Add zoom effect on touch devices
-    button.addEventListener('touchstart', () => {
-        button.classList.add('zoomed');
-    });
-    button.addEventListener('touchend', () => {
-        button.classList.remove('zoomed');
-    });
-    button.addEventListener('touchcancel', () => {
-        button.classList.remove('zoomed');
-    });
+  // Zoom effect on touch devices with better event handling
+  function addZoom() {
+    button.classList.add('zoomed');
+  }
+  function removeZoom() {
+    // Delay removal for smooth effect
+    setTimeout(() => button.classList.remove('zoomed'), 100);
+  }
+
+  button.addEventListener('touchstart', addZoom);
+  button.addEventListener('touchend', removeZoom);
+  button.addEventListener('touchcancel', removeZoom);
+
+  // Fallback for pointer events (some browsers)
+  button.addEventListener('pointerdown', addZoom);
+  button.addEventListener('pointerup', removeZoom);
+  button.addEventListener('pointercancel', removeZoom);
 </script>
 
 </body>
