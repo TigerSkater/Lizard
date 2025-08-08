@@ -15,8 +15,8 @@
     height: 100vh;
     margin: 0;
 
-    /* Improved faint lizard background for iOS */
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><text x='0' y='40' font-size='40' fill='black' opacity='0.1'>🦎</text></svg>");
+    /* Faint lizard background */
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><text x='0' y='40' font-size='40' fill='black' opacity='0.08'>🦎</text></svg>");
     background-size: 60px 60px;
     background-repeat: repeat;
   }
@@ -32,10 +32,9 @@
     box-shadow: 0 6px #059669;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
     user-select: none;
-    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on iOS */
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /* Active or zoomed effect */
   #lizardButton:active,
   #lizardButton.zoomed {
     transform: scale(1.1) translateY(4px);
@@ -63,39 +62,46 @@
 <button id="lizardButton" aria-label="Lizard button">🦎</button>
 <div id="counter" aria-live="polite">Pressed: 0</div>
 
-<audio id="lizardSound" src="audio/Lizard.mp3" preload="auto"></audio>
-
 <script>
   const button = document.getElementById('lizardButton');
   const counterDisplay = document.getElementById('counter');
-  const lizardSound = document.getElementById('lizardSound');
 
   let count = 0;
+
+  // Create a small pool of preloaded sounds
+  const soundPoolSize = 5;
+  const sounds = [];
+  for (let i = 0; i < soundPoolSize; i++) {
+    const audio = new Audio("audio/Lizard.mp3");
+    audio.preload = "auto";
+    sounds.push(audio);
+  }
+  let soundIndex = 0;
 
   button.addEventListener('click', () => {
     count++;
     counterDisplay.textContent = `Pressed: ${count}`;
 
-    const soundClone = lizardSound.cloneNode(true);
-    soundClone.play().catch(err => {
+    // Play next sound in pool
+    const sound = sounds[soundIndex];
+    sound.currentTime = 0;
+    sound.play().catch(err => {
       console.warn('Audio playback prevented:', err);
     });
+    soundIndex = (soundIndex + 1) % soundPoolSize;
   });
 
-  // Zoom effect on touch devices with better event handling
+  // Zoom animation for touch devices
   function addZoom() {
     button.classList.add('zoomed');
   }
   function removeZoom() {
-    // Delay removal for smooth effect
     setTimeout(() => button.classList.remove('zoomed'), 100);
   }
 
   button.addEventListener('touchstart', addZoom);
   button.addEventListener('touchend', removeZoom);
   button.addEventListener('touchcancel', removeZoom);
-
-  // Fallback for pointer events (some browsers)
   button.addEventListener('pointerdown', addZoom);
   button.addEventListener('pointerup', removeZoom);
   button.addEventListener('pointercancel', removeZoom);
