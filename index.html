@@ -13,24 +13,37 @@
         align-items: center;
         height: 100vh;
         margin: 0;
+
+        /* Subtle lizard background */
+        background-image: repeating-linear-gradient(
+            45deg,
+            rgba(0,0,0,0) 0,
+            rgba(0,0,0,0) 48px,
+            rgba(0,0,0,0.05) 48px,
+            rgba(0,0,0,0.05) 50px
+        ),
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><text x='0' y='40' font-size='40'>🦎</text></svg>");
+        background-size: 60px 60px;
+        background-repeat: repeat;
+        opacity: 0.9;
     }
     #lizardButton {
         background-color: #a7f3d0;
         border: none;
         border-radius: 50%;
-        width: 120px;
-        height: 120px;
-        font-size: 50px;
+        width: 160px; /* Bigger size */
+        height: 160px; /* Bigger size */
+        font-size: 70px; /* Bigger emoji */
         cursor: pointer;
-        box-shadow: 0 5px #059669;
+        box-shadow: 0 6px #059669;
         transition: transform 0.1s, box-shadow 0.1s;
     }
     #lizardButton:active {
         transform: translateY(4px);
-        box-shadow: 0 2px #059669;
+        box-shadow: 0 3px #059669;
     }
     #counter {
-        font-size: 24px;
+        font-size: 28px;
         margin-top: 20px;
         color: #065f46;
     }
@@ -41,7 +54,7 @@
 <button id="lizardButton">🦎</button>
 <div id="counter">Pressed: 0</div>
 
-<!-- Update path if audio is in "audio" folder -->
+<!-- Change path if your file is in "audio" folder -->
 <audio id="lizardSound" src="audio/Lizard.mp3" preload="auto"></audio>
 
 <script>
@@ -54,7 +67,7 @@
     button.addEventListener('click', () => {
         count++;
         counterDisplay.textContent = `Pressed: ${count}`;
-        lizardSound.currentTime = 0; // restart sound if pressed quickly
+        lizardSound.currentTime = 0;
         lizardSound.play().catch(err => {
             console.warn('Audio playback prevented:', err);
         });
