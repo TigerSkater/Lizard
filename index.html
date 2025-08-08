@@ -29,11 +29,13 @@
         font-size: 70px;
         cursor: pointer;
         box-shadow: 0 6px #059669;
-        transition: transform 0.1s, box-shadow 0.1s;
+        transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
 
-    #lizardButton:active {
-        transform: translateY(4px);
+    /* Button pressed styles, including zoom */
+    #lizardButton:active,
+    #lizardButton.zoomed {
+        transform: scale(1.1) translateY(4px);
         box-shadow: 0 3px #059669;
     }
 
@@ -76,6 +78,17 @@
         soundClone.play().catch(err => {
             console.warn('Audio playback prevented:', err);
         });
+    });
+
+    // Add zoom effect on touch devices
+    button.addEventListener('touchstart', () => {
+        button.classList.add('zoomed');
+    });
+    button.addEventListener('touchend', () => {
+        button.classList.remove('zoomed');
+    });
+    button.addEventListener('touchcancel', () => {
+        button.classList.remove('zoomed');
     });
 </script>
 
