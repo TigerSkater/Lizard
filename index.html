@@ -13,20 +13,15 @@
         align-items: center;
         height: 100vh;
         margin: 0;
-
-        /* Faint lizard background */
-        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><text x='0' y='40' font-size='40' fill='rgba(0,0,0,0.1)'>🦎</text></svg>");
-        background-size: 60px 60px;
-        background-repeat: repeat;
     }
 
     #lizardButton {
         background-color: #a7f3d0; /* Solid button */
         border: none;
         border-radius: 50%;
-        width: 160px; /* Bigger size */
+        width: 160px;
         height: 160px;
-        font-size: 70px; /* Bigger emoji */
+        font-size: 70px;
         cursor: pointer;
         box-shadow: 0 6px #059669;
         transition: transform 0.1s, box-shadow 0.1s;
@@ -42,6 +37,15 @@
         margin-top: 20px;
         color: #065f46;
     }
+
+    /* Make button bigger on small screens (iOS) */
+    @media (max-width: 768px) {
+        #lizardButton {
+            width: 200px;
+            height: 200px;
+            font-size: 90px;
+        }
+    }
 </style>
 </head>
 <body>
@@ -49,7 +53,6 @@
 <button id="lizardButton">🦎</button>
 <div id="counter">Pressed: 0</div>
 
-<!-- Change path if your file is in "audio" folder -->
 <audio id="lizardSound" src="audio/Lizard.mp3" preload="auto"></audio>
 
 <script>
@@ -62,8 +65,10 @@
     button.addEventListener('click', () => {
         count++;
         counterDisplay.textContent = `Pressed: ${count}`;
-        lizardSound.currentTime = 0;
-        lizardSound.play().catch(err => {
+
+        // Clone the audio node so multiple presses can overlap
+        const soundClone = lizardSound.cloneNode(true);
+        soundClone.play().catch(err => {
             console.warn('Audio playback prevented:', err);
         });
     });
