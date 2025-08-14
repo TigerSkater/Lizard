@@ -14,8 +14,7 @@
     align-items: center;
     height: 100vh;
     margin: 0;
-
-    /* Faint lizard background */
+    overflow: hidden;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><text x='0' y='40' font-size='40' fill='black' opacity='0.08'>🦎</text></svg>");
     background-size: 60px 60px;
     background-repeat: repeat;
@@ -41,11 +40,53 @@
     box-shadow: 0 3px #059669;
   }
 
+  .addButtons {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+  }
+
+  .addButtons button {
+    background-color: #6ee7b7;
+    border: none;
+    padding: 10px 16px;
+    font-size: 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px #059669;
+  }
+
   #counter {
     font-size: 28px;
     margin-top: 20px;
     color: #065f46;
     user-select: none;
+    height: 40px;
+  }
+
+  .floatText {
+    position: absolute;
+    color: #065f46;
+    font-weight: bold;
+    font-size: 24px;
+    animation: floatUp 1s ease-out forwards;
+    pointer-events: none;
+  }
+
+  @keyframes floatUp {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-40px); opacity: 0; }
+  }
+
+  .fallingLizard {
+    position: absolute;
+    font-size: 40px;
+    animation: fall linear;
+  }
+
+  @keyframes fall {
+    0% { transform: translateY(-50px); }
+    100% { transform: translateY(110vh); }
   }
 
   @media (max-width: 768px) {
@@ -60,15 +101,26 @@
 <body>
 
 <button id="lizardButton" aria-label="Lizard button">🦎</button>
+
+<div class="addButtons">
+  <button id="add10">+10</button>
+  <button id="add100">+100</button>
+  <button id="autoClick">Auto: OFF</button>
+</div>
+
 <div id="counter" aria-live="polite">Pressed: 0</div>
 
 <script>
   const button = document.getElementById('lizardButton');
   const counterDisplay = document.getElementById('counter');
+  const add10Btn = document.getElementById('add10');
+  const add100Btn = document.getElementById('add100');
+  const autoClickBtn = document.getElementById('autoClick');
 
   let count = 0;
+  let autoClickInterval = null;
 
-  // Create a small pool of preloaded sounds
+  // Sound pool
   const soundPoolSize = 5;
   const sounds = [];
   for (let i = 0; i < soundPoolSize; i++) {
@@ -78,33 +130,88 @@
   }
   let soundIndex = 0;
 
-  button.addEventListener('click', () => {
-    count++;
-    counterDisplay.textContent = `Pressed: ${count}`;
-
-    // Play next sound in pool
+  function playSound() {
     const sound = sounds[soundIndex];
     sound.currentTime = 0;
     sound.play().catch(err => {
       console.warn('Audio playback prevented:', err);
     });
     soundIndex = (soundIndex + 1) % soundPoolSize;
+  }
+
+  function updateCounter(amount) {
+    count += amount;
+    counterDisplay.textContent = `Pressed: ${count}`;
+    showFloatingText(`+${amount}`);
+  }
+
+  function showFloatingText(text) {
+    const span = document.createElement('span');
+    span.className = 'floatText';
+    span.textContent = text;
+    const rect = button.getBoundingClientRect();
+    span.style.left = (rect.left + rect.width / 2) + 'px';
+    span.style.top = (rect.top - 10) + 'px';
+    document.body.appendChild(span);
+    setTimeout(() => span.remove(), 1000);
+  }
+
+  button.addEventListener('click', () => {
+    updateCounter(1);
+    playSound();
   });
 
-  // Zoom animation for touch devices
-  function addZoom() {
-    button.classList.add('zoomed');
-  }
-  function removeZoom() {
-    setTimeout(() => button.classList.remove('zoomed'), 100);
+  add10Btn.addEventListener('click', () => {
+    updateCounter(10);
+    playSound();
+  });
+
+  add100Btn.addEventListener('click', () => {
+    updateCounter(100);
+    playSound();
+  });
+
+  // Autoclick logic
+  autoClickBtn.addEventListener('click', () => {
+    if (autoClickInterval) {
+      clearInterval(autoClickInterval);
+      autoClickInterval = null;
+      autoClickBtn.textContent = 'Auto: OFF';
+    } else {
+      autoClickInterval = setInterval(() => {
+        button.click();
+        button.classList.add('zoomed');
+        setTimeout(() => button.classList.remove('zoomed'), 100);
+      }, 500); // 2 per second
+      autoClickBtn.textContent = 'Auto: ON';
+    }
+  });
+
+  // Falling lizards
+  function spawnFallingLizard() {
+    const liz = document.createElement('div');
+    liz.className = 'fallingLizard';
+    liz.textContent = '🦎';
+    liz.style.left = Math.random() * 95 + 'vw';
+    liz.style.animationDuration = (3 + Math.random() * 3) + 's';
+    liz.addEventListener('click', () => {
+      speak('Lizard');
+      liz.remove();
+    });
+    document.body.appendChild(liz);
+    liz.addEventListener('animationend', () => liz.remove());
   }
 
-  button.addEventListener('touchstart', addZoom);
-  button.addEventListener('touchend', removeZoom);
-  button.addEventListener('touchcancel', removeZoom);
-  button.addEventListener('pointerdown', addZoom);
-  button.addEventListener('pointerup', removeZoom);
-  button.addEventListener('pointercancel', removeZoom);
+  setInterval(spawnFallingLizard, 2000);
+
+  // Speech for falling lizards
+  function speak(text) {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.1;
+      speechSynthesis.speak(utterance);
+    }
+  }
 </script>
 
 </body>
