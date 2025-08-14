@@ -43,9 +43,7 @@
   .addButtons {
     margin-top: 15px;
     display: flex;
-    flex-wrap: wrap;
     gap: 10px;
-    justify-content: center;
   }
 
   .addButtons button {
@@ -84,20 +82,11 @@
     position: absolute;
     font-size: 40px;
     animation: fall linear;
-    cursor: pointer;
   }
 
   @keyframes fall {
     0% { transform: translateY(-50px); }
     100% { transform: translateY(110vh); }
-  }
-
-  .bouncingLizard {
-    position: absolute;
-    font-size: 40px;
-    cursor: pointer;
-    user-select: none;
-    will-change: transform;
   }
 
   @media (max-width: 768px) {
@@ -116,7 +105,7 @@
 <div class="addButtons">
   <button id="add10">+10</button>
   <button id="add100">+100</button>
-  <button id="autoClick">Auto: 0/sec</button>
+  <button id="autoClick">Auto: OFF</button>
 </div>
 
 <div id="counter" aria-live="polite">Pressed: 0</div>
@@ -130,11 +119,9 @@
 
   let count = 0;
   let autoClickInterval = null;
-  let autoSpeedIndex = 0;
-  const autoSpeeds = [0, 2, 5, 10, 20]; // clicks per second
 
   // Sound pool
-  const soundPoolSize = 20;
+  const soundPoolSize = 5;
   const sounds = [];
   for (let i = 0; i < soundPoolSize; i++) {
     const audio = new Audio("audio/Lizard.mp3");
@@ -143,15 +130,13 @@
   }
   let soundIndex = 0;
 
-  function playSound(times = 1) {
-    for (let i = 0; i < times; i++) {
-      const sound = sounds[soundIndex];
-      sound.currentTime = 0;
-      sound.play().catch(err => {
-        console.warn('Audio playback prevented:', err);
-      });
-      soundIndex = (soundIndex + 1) % soundPoolSize;
-    }
+  function playSound() {
+    const sound = sounds[soundIndex];
+    sound.currentTime = 0;
+    sound.play().catch(err => {
+      console.warn('Audio playback prevented:', err);
+    });
+    soundIndex = (soundIndex + 1) % soundPoolSize;
   }
 
   function updateCounter(amount) {
@@ -174,34 +159,31 @@
   button.addEventListener('click', () => {
     updateCounter(1);
     playSound();
-    spawnBouncingLizard();
   });
 
   add10Btn.addEventListener('click', () => {
     updateCounter(10);
-    playSound(10);
-    for (let i = 0; i < 10; i++) spawnBouncingLizard();
+    playSound();
   });
 
   add100Btn.addEventListener('click', () => {
     updateCounter(100);
-    playSound(100);
-    for (let i = 0; i < 100; i++) spawnBouncingLizard();
+    playSound();
   });
 
   // Autoclick logic
   autoClickBtn.addEventListener('click', () => {
-    autoSpeedIndex = (autoSpeedIndex + 1) % autoSpeeds.length;
-    const cps = autoSpeeds[autoSpeedIndex];
-    autoClickBtn.textContent = `Auto: ${cps}/sec`;
-
-    if (autoClickInterval) clearInterval(autoClickInterval);
-    if (cps > 0) {
+    if (autoClickInterval) {
+      clearInterval(autoClickInterval);
+      autoClickInterval = null;
+      autoClickBtn.textContent = 'Auto: OFF';
+    } else {
       autoClickInterval = setInterval(() => {
         button.click();
         button.classList.add('zoomed');
-        setTimeout(() => button.classList.remove('zoomed'), 80);
-      }, 1000 / cps);
+        setTimeout(() => button.classList.remove('zoomed'), 100);
+      }, 500); // 2 per second
+      autoClickBtn.textContent = 'Auto: ON';
     }
   });
 
@@ -211,47 +193,24 @@
     liz.className = 'fallingLizard';
     liz.textContent = '🦎';
     liz.style.left = Math.random() * 95 + 'vw';
-    liz.style.animationDuration = (5 + Math.random() * 3) + 's';
+    liz.style.animationDuration = (3 + Math.random() * 3) + 's';
     liz.addEventListener('click', () => {
-      playSound();
+      speak('Lizard');
       liz.remove();
     });
     document.body.appendChild(liz);
     liz.addEventListener('animationend', () => liz.remove());
   }
-  setInterval(spawnFallingLizard, 1500);
 
-  // Bouncing lizards (DVD style)
-  function spawnBouncingLizard() {
-    const liz = document.createElement("div");
-    liz.className = "bouncingLizard";
-    liz.textContent = "🦎";
-    document.body.appendChild(liz);
+  setInterval(spawnFallingLizard, 2000);
 
-    liz.style.left = Math.random() * (window.innerWidth - 40) + "px";
-    liz.style.top = Math.random() * (window.innerHeight - 40) + "px";
-
-    let dx = (Math.random() < 0.5 ? 1 : -1) * (2 + Math.random() * 3);
-    let dy = (Math.random() < 0.5 ? 1 : -1) * (2 + Math.random() * 3);
-
-    liz.addEventListener('click', () => {
-      playSound();
-      liz.remove();
-    });
-
-    function move() {
-      let x = parseFloat(liz.style.left);
-      let y = parseFloat(liz.style.top);
-
-      if (x <= 0 || x >= window.innerWidth - 40) dx *= -1;
-      if (y <= 0 || y >= window.innerHeight - 40) dy *= -1;
-
-      liz.style.left = x + dx + "px";
-      liz.style.top = y + dy + "px";
-
-      requestAnimationFrame(move);
+  // Speech for falling lizards
+  function speak(text) {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.1;
+      speechSynthesis.speak(utterance);
     }
-    move();
   }
 </script>
 
