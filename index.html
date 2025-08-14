@@ -108,6 +108,8 @@
 
   let count = 0;
   let autoClickInterval = null;
+  let autoSpeedIndex = 0;
+  const autoSpeeds = [0, 5, 10, 20]; // clicks per second
 
   // Audio pool
   const soundPoolSize = 10;
@@ -126,7 +128,7 @@
         sound.currentTime = 0;
         sound.play().catch(err => console.warn(err));
         soundIndex = (soundIndex + 1) % soundPoolSize;
-      }, i * 200); // 0.2s gap between each
+      }, i * 200);
     }
   }
 
@@ -157,19 +159,19 @@
     playSound(10);
   });
 
-  // Autoclick
+  // Autoclick with multiple speeds
   autoClickBtn.addEventListener('click', () => {
-    if (autoClickInterval) {
-      clearInterval(autoClickInterval);
-      autoClickInterval = null;
-      autoClickBtn.textContent = 'Auto: OFF';
-    } else {
+    autoSpeedIndex = (autoSpeedIndex + 1) % autoSpeeds.length;
+    const cps = autoSpeeds[autoSpeedIndex];
+    autoClickBtn.textContent = cps > 0 ? `Auto: ${cps}/sec` : 'Auto: OFF';
+
+    if (autoClickInterval) clearInterval(autoClickInterval);
+    if (cps > 0) {
       autoClickInterval = setInterval(() => {
         button.click();
         button.classList.add('zoomed');
-        setTimeout(() => button.classList.remove('zoomed'), 100);
-      }, 500);
-      autoClickBtn.textContent = 'Auto: ON';
+        setTimeout(() => button.classList.remove('zoomed'), 80);
+      }, 1000 / cps);
     }
   });
 
