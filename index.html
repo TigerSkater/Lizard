@@ -109,7 +109,7 @@
   let count = 0;
   let autoClickInterval = null;
   let autoSpeedIndex = 0;
-  const autoSpeeds = [0, 5, 10, 20]; // clicks per second
+  const autoSpeeds = [0, 2, 5, 10, 20]; // Added original 2/sec speed
 
   // Audio pool
   const soundPoolSize = 10;
@@ -159,7 +159,7 @@
     playSound(10);
   });
 
-  // Autoclick with multiple speeds
+  // Autoclick with multiple speeds including original
   autoClickBtn.addEventListener('click', () => {
     autoSpeedIndex = (autoSpeedIndex + 1) % autoSpeeds.length;
     const cps = autoSpeeds[autoSpeedIndex];
@@ -208,6 +208,7 @@
     move();
   }
 
+  // Create multiple bouncing lizards
   for (let i = 0; i < 5; i++) {
     createDvdLizard();
   }
