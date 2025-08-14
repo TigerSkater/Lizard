@@ -43,7 +43,9 @@
   .addButtons {
     margin-top: 15px;
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
+    justify-content: center;
   }
 
   .addButtons button {
@@ -82,6 +84,7 @@
     position: absolute;
     font-size: 40px;
     animation: fall linear;
+    cursor: pointer;
   }
 
   @keyframes fall {
@@ -105,7 +108,7 @@
 <div class="addButtons">
   <button id="add10">+10</button>
   <button id="add100">+100</button>
-  <button id="autoClick">Auto: OFF</button>
+  <button id="autoClick">Auto: 0/sec</button>
 </div>
 
 <div id="counter" aria-live="polite">Pressed: 0</div>
@@ -119,9 +122,11 @@
 
   let count = 0;
   let autoClickInterval = null;
+  let autoSpeedIndex = 0;
+  const autoSpeeds = [0, 2, 5, 10, 20]; // clicks per second
 
   // Sound pool
-  const soundPoolSize = 5;
+  const soundPoolSize = 10;
   const sounds = [];
   for (let i = 0; i < soundPoolSize; i++) {
     const audio = new Audio("audio/Lizard.mp3");
@@ -171,19 +176,19 @@
     playSound();
   });
 
-  // Autoclick logic
+  // Autoclick logic with multiple speeds
   autoClickBtn.addEventListener('click', () => {
-    if (autoClickInterval) {
-      clearInterval(autoClickInterval);
-      autoClickInterval = null;
-      autoClickBtn.textContent = 'Auto: OFF';
-    } else {
+    autoSpeedIndex = (autoSpeedIndex + 1) % autoSpeeds.length;
+    const cps = autoSpeeds[autoSpeedIndex];
+    autoClickBtn.textContent = `Auto: ${cps}/sec`;
+
+    if (autoClickInterval) clearInterval(autoClickInterval);
+    if (cps > 0) {
       autoClickInterval = setInterval(() => {
         button.click();
         button.classList.add('zoomed');
-        setTimeout(() => button.classList.remove('zoomed'), 100);
-      }, 500); // 2 per second
-      autoClickBtn.textContent = 'Auto: ON';
+        setTimeout(() => button.classList.remove('zoomed'), 80);
+      }, 1000 / cps);
     }
   });
 
@@ -193,25 +198,16 @@
     liz.className = 'fallingLizard';
     liz.textContent = '🦎';
     liz.style.left = Math.random() * 95 + 'vw';
-    liz.style.animationDuration = (3 + Math.random() * 3) + 's';
+    liz.style.animationDuration = (2 + Math.random() * 2) + 's';
     liz.addEventListener('click', () => {
-      speak('Lizard');
+      playSound(); // play audio/Lizard.mp3
       liz.remove();
     });
     document.body.appendChild(liz);
     liz.addEventListener('animationend', () => liz.remove());
   }
 
-  setInterval(spawnFallingLizard, 2000);
-
-  // Speech for falling lizards
-  function speak(text) {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.1;
-      speechSynthesis.speak(utterance);
-    }
-  }
+  setInterval(spawnFallingLizard, 1500);
 </script>
 
 </body>
