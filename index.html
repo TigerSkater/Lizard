@@ -109,15 +109,24 @@
   let count = 0;
   let autoClickInterval = null;
 
-  function speakLizard(times = 1) {
-    if ('speechSynthesis' in window) {
-      for (let i = 0; i < times; i++) {
-        setTimeout(() => {
-          const utterance = new SpeechSynthesisUtterance('Lizard');
-          utterance.rate = 1.1;
-          speechSynthesis.speak(utterance);
-        }, i * 400); // 0.4 sec apart
-      }
+  // Audio pool
+  const soundPoolSize = 10;
+  const sounds = [];
+  for (let i = 0; i < soundPoolSize; i++) {
+    const audio = new Audio("audio/Lizard.mp3");
+    audio.preload = "auto";
+    sounds.push(audio);
+  }
+  let soundIndex = 0;
+
+  function playSound(times = 1) {
+    for (let i = 0; i < times; i++) {
+      setTimeout(() => {
+        const sound = sounds[soundIndex];
+        sound.currentTime = 0;
+        sound.play().catch(err => console.warn(err));
+        soundIndex = (soundIndex + 1) % soundPoolSize;
+      }, i * 200); // 0.2s gap between each
     }
   }
 
@@ -140,12 +149,12 @@
 
   button.addEventListener('click', () => {
     updateCounter(1);
-    speakLizard();
+    playSound();
   });
 
   add10Btn.addEventListener('click', () => {
     updateCounter(10);
-    speakLizard(10);
+    playSound(10);
   });
 
   // Autoclick
@@ -173,11 +182,11 @@
 
     let x = Math.random() * (window.innerWidth - 40);
     let y = Math.random() * (window.innerHeight - 40);
-    let dx = (Math.random() < 0.5 ? 1 : -1) * 2;
-    let dy = (Math.random() < 0.5 ? 1 : -1) * 2;
+    let dx = (Math.random() < 0.5 ? 1 : -1) * 2.5;
+    let dy = (Math.random() < 0.5 ? 1 : -1) * 2.5;
 
     liz.addEventListener('click', () => {
-      speakLizard();
+      playSound();
       updateCounter(1);
     });
 
@@ -197,7 +206,6 @@
     move();
   }
 
-  // Create multiple bouncing lizards
   for (let i = 0; i < 5; i++) {
     createDvdLizard();
   }
