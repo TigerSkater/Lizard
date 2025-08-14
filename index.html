@@ -126,7 +126,7 @@
   const autoSpeeds = [0, 2, 5, 10, 20]; // clicks per second
 
   // Sound pool
-  const soundPoolSize = 10;
+  const soundPoolSize = 20;
   const sounds = [];
   for (let i = 0; i < soundPoolSize; i++) {
     const audio = new Audio("audio/Lizard.mp3");
@@ -135,13 +135,15 @@
   }
   let soundIndex = 0;
 
-  function playSound() {
-    const sound = sounds[soundIndex];
-    sound.currentTime = 0;
-    sound.play().catch(err => {
-      console.warn('Audio playback prevented:', err);
-    });
-    soundIndex = (soundIndex + 1) % soundPoolSize;
+  function playSound(times = 1) {
+    for (let i = 0; i < times; i++) {
+      const sound = sounds[soundIndex];
+      sound.currentTime = 0;
+      sound.play().catch(err => {
+        console.warn('Audio playback prevented:', err);
+      });
+      soundIndex = (soundIndex + 1) % soundPoolSize;
+    }
   }
 
   function updateCounter(amount) {
@@ -168,12 +170,12 @@
 
   add10Btn.addEventListener('click', () => {
     updateCounter(10);
-    playSound();
+    playSound(10);
   });
 
   add100Btn.addEventListener('click', () => {
     updateCounter(100);
-    playSound();
+    playSound(100);
   });
 
   // Autoclick logic with multiple speeds
@@ -198,9 +200,9 @@
     liz.className = 'fallingLizard';
     liz.textContent = '🦎';
     liz.style.left = Math.random() * 95 + 'vw';
-    liz.style.animationDuration = (2 + Math.random() * 2) + 's';
+    liz.style.animationDuration = (5 + Math.random() * 3) + 's'; // slower fall: 5-8s
     liz.addEventListener('click', () => {
-      playSound(); // play audio/Lizard.mp3
+      playSound();
       liz.remove();
     });
     document.body.appendChild(liz);
