@@ -93,10 +93,11 @@
   }
 
   .bouncingLizard {
-    position: fixed;
+    position: absolute;
     font-size: 40px;
     cursor: pointer;
     user-select: none;
+    will-change: transform;
   }
 
   @media (max-width: 768px) {
@@ -132,8 +133,8 @@
   let autoSpeedIndex = 0;
   const autoSpeeds = [0, 2, 5, 10, 20]; // clicks per second
 
-  // Bigger sound pool for overlapping plays
-  const soundPoolSize = 200;
+  // Sound pool
+  const soundPoolSize = 20;
   const sounds = [];
   for (let i = 0; i < soundPoolSize; i++) {
     const audio = new Audio("audio/Lizard.mp3");
@@ -142,20 +143,19 @@
   }
   let soundIndex = 0;
 
-  function playSound() {
-    const sound = sounds[soundIndex];
-    sound.currentTime = 0;
-    sound.play().catch(err => {
-      console.warn('Audio playback prevented:', err);
-    });
-    soundIndex = (soundIndex + 1) % soundPoolSize;
+  function playSound(times = 1) {
+    for (let i = 0; i < times; i++) {
+      const sound = sounds[soundIndex];
+      sound.currentTime = 0;
+      sound.play().catch(err => {
+        console.warn('Audio playback prevented:', err);
+      });
+      soundIndex = (soundIndex + 1) % soundPoolSize;
+    }
   }
 
-  function updateCounter(amount, playAudioEach = false) {
-    for (let i = 0; i < amount; i++) {
-      count++;
-      if (playAudioEach) playSound();
-    }
+  function updateCounter(amount) {
+    count += amount;
     counterDisplay.textContent = `Pressed: ${count}`;
     showFloatingText(`+${amount}`);
   }
@@ -172,18 +172,24 @@
   }
 
   button.addEventListener('click', () => {
-    updateCounter(1, true);
+    updateCounter(1);
+    playSound();
+    spawnBouncingLizard();
   });
 
   add10Btn.addEventListener('click', () => {
-    updateCounter(10, true);
+    updateCounter(10);
+    playSound(10);
+    for (let i = 0; i < 10; i++) spawnBouncingLizard();
   });
 
   add100Btn.addEventListener('click', () => {
-    updateCounter(100, true);
+    updateCounter(100);
+    playSound(100);
+    for (let i = 0; i < 100; i++) spawnBouncingLizard();
   });
 
-  // Autoclick logic with multiple speeds
+  // Autoclick logic
   autoClickBtn.addEventListener('click', () => {
     autoSpeedIndex = (autoSpeedIndex + 1) % autoSpeeds.length;
     const cps = autoSpeeds[autoSpeedIndex];
@@ -205,7 +211,7 @@
     liz.className = 'fallingLizard';
     liz.textContent = '🦎';
     liz.style.left = Math.random() * 95 + 'vw';
-    liz.style.animationDuration = (2 + Math.random() * 2) + 's';
+    liz.style.animationDuration = (5 + Math.random() * 3) + 's';
     liz.addEventListener('click', () => {
       playSound();
       liz.remove();
@@ -213,38 +219,40 @@
     document.body.appendChild(liz);
     liz.addEventListener('animationend', () => liz.remove());
   }
-  setInterval(spawnFallingLizard, 800); // faster falling
+  setInterval(spawnFallingLizard, 1500);
 
-  // Bouncing DVD-style lizards
-  function createBouncingLizard() {
-    const liz = document.createElement('div');
-    liz.className = 'bouncingLizard';
-    liz.textContent = '🦎';
-    liz.style.left = Math.random() * (window.innerWidth - 50) + 'px';
-    liz.style.top = Math.random() * (window.innerHeight - 50) + 'px';
+  // Bouncing lizards (DVD style)
+  function spawnBouncingLizard() {
+    const liz = document.createElement("div");
+    liz.className = "bouncingLizard";
+    liz.textContent = "🦎";
     document.body.appendChild(liz);
+
+    liz.style.left = Math.random() * (window.innerWidth - 40) + "px";
+    liz.style.top = Math.random() * (window.innerHeight - 40) + "px";
 
     let dx = (Math.random() < 0.5 ? 1 : -1) * (2 + Math.random() * 3);
     let dy = (Math.random() < 0.5 ? 1 : -1) * (2 + Math.random() * 3);
 
-    function bounce() {
-      let x = parseFloat(liz.style.left);
-      let y = parseFloat(liz.style.top);
-      x += dx;
-      y += dy;
-      if (x <= 0 || x >= window.innerWidth - 50) dx *= -1;
-      if (y <= 0 || y >= window.innerHeight - 50) dy *= -1;
-      liz.style.left = x + 'px';
-      liz.style.top = y + 'px';
-      requestAnimationFrame(bounce);
-    }
-    bounce();
-
     liz.addEventListener('click', () => {
       playSound();
+      liz.remove();
     });
+
+    function move() {
+      let x = parseFloat(liz.style.left);
+      let y = parseFloat(liz.style.top);
+
+      if (x <= 0 || x >= window.innerWidth - 40) dx *= -1;
+      if (y <= 0 || y >= window.innerHeight - 40) dy *= -1;
+
+      liz.style.left = x + dx + "px";
+      liz.style.top = y + dy + "px";
+
+      requestAnimationFrame(move);
+    }
+    move();
   }
-  setInterval(createBouncingLizard, 2000);
 </script>
 
 </body>
