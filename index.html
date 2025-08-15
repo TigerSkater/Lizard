@@ -15,6 +15,7 @@
     height: 100vh;
     margin: 0;
     overflow: hidden;
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' height='40' width='40'><text y='30' font-size='30'>🦎</text></svg>") 16 16, auto;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><text x='0' y='40' font-size='40' fill='black' opacity='0.08'>🦎</text></svg>");
     background-size: 60px 60px;
     background-repeat: repeat;
@@ -32,7 +33,7 @@
     transition: transform 0.15s ease, box-shadow 0.15s ease;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
-    z-index: 2;
+    z-index: 3;
   }
 
   #lizardButton:active,
@@ -45,7 +46,7 @@
     margin-top: 15px;
     display: flex;
     gap: 10px;
-    z-index: 2;
+    z-index: 3;
   }
 
   .addButtons button {
@@ -64,7 +65,7 @@
     color: #065f46;
     user-select: none;
     height: 40px;
-    z-index: 2;
+    z-index: 3;
   }
 
   .floatText {
@@ -74,6 +75,7 @@
     font-size: 24px;
     animation: floatUp 1s ease-out forwards;
     pointer-events: none;
+    z-index: 4;
   }
 
   @keyframes floatUp {
@@ -86,6 +88,15 @@
     font-size: 40px;
     cursor: pointer;
     user-select: none;
+    z-index: 1;
+  }
+
+  .turtle {
+    position: absolute;
+    font-size: 60px;
+    z-index: 2;
+    pointer-events: none;
+    transition: transform 0.3s;
   }
 </style>
 </head>
@@ -110,6 +121,7 @@
   let autoClickInterval = null;
   let autoSpeedIndex = 0;
   const autoSpeeds = [0, 2, 5, 10, 20];
+  const lizards = [];
 
   // Audio pool
   const soundPoolSize = 10;
@@ -180,6 +192,7 @@
     liz.className = 'dvdLizard';
     liz.textContent = '🦎';
     document.body.appendChild(liz);
+    lizards.push(liz);
 
     let x = Math.random() * (window.innerWidth - 40);
     let y = Math.random() * (window.innerHeight - 40);
@@ -192,6 +205,7 @@
     });
 
     function move() {
+      if (!document.body.contains(liz)) return; // Stop moving if removed
       x += dx;
       y += dy;
 
@@ -203,18 +217,56 @@
 
       requestAnimationFrame(move);
     }
-
     move();
   }
 
   // Spawn initial lizards
-  for (let i = 0; i < 5; i++) createDvdLizard();
+  for (let i = 0; i < 10; i++) createDvdLizard();
 
-  // Continuously spawn new lizards every 3 seconds
+  // Respawn lizards slowly over time
   setInterval(() => {
-    const spawnCount = Math.floor(Math.random() * 3) + 1; // 1 to 3 lizards
-    for (let i = 0; i < spawnCount; i++) createDvdLizard();
-  }, 3000);
+    if (lizards.length < 20) {
+      createDvdLizard();
+    }
+  }, 2000);
+
+  // Turtle predator
+  function spawnTurtle() {
+    const turtle = document.createElement('div');
+    turtle.className = 'turtle';
+    turtle.textContent = '🐢';
+    document.body.appendChild(turtle);
+
+    let startX = -100;
+    let startY = Math.random() * (window.innerHeight - 60);
+    turtle.style.left = startX + 'px';
+    turtle.style.top = startY + 'px';
+
+    let speed = 6 + Math.random() * 4;
+    function move() {
+      startX += speed;
+      turtle.style.left = startX + 'px';
+      if (startX > window.innerWidth + 100) {
+        turtle.remove();
+      } else {
+        requestAnimationFrame(move);
+      }
+    }
+    move();
+
+    // Kill half the lizards
+    const killCount = Math.floor(lizards.length / 2);
+    for (let i = 0; i < killCount; i++) {
+      const liz = lizards.splice(Math.floor(Math.random() * lizards.length), 1)[0];
+      if (liz) liz.remove();
+    }
+  }
+
+  // Spawn turtle every 10-20 seconds randomly
+  setInterval(() => {
+    if (Math.random() < 0.5) spawnTurtle();
+  }, 10000);
+
 </script>
 
 </body>
