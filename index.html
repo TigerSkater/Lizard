@@ -109,7 +109,7 @@
   let count = 0;
   let autoClickInterval = null;
   let autoSpeedIndex = 0;
-  const autoSpeeds = [0, 2, 5, 10, 20]; // Added original 2/sec speed
+  const autoSpeeds = [0, 2, 5, 10, 20];
 
   // Audio pool
   const soundPoolSize = 10;
@@ -159,7 +159,6 @@
     playSound(10);
   });
 
-  // Autoclick with multiple speeds including original
   autoClickBtn.addEventListener('click', () => {
     autoSpeedIndex = (autoSpeedIndex + 1) % autoSpeeds.length;
     const cps = autoSpeeds[autoSpeedIndex];
@@ -184,8 +183,8 @@
 
     let x = Math.random() * (window.innerWidth - 40);
     let y = Math.random() * (window.innerHeight - 40);
-    let dx = (Math.random() < 0.5 ? 1 : -1) * 2.5;
-    let dy = (Math.random() < 0.5 ? 1 : -1) * 2.5;
+    let dx = (Math.random() < 0.5 ? 1 : -1) * (2 + Math.random() * 2);
+    let dy = (Math.random() < 0.5 ? 1 : -1) * (2 + Math.random() * 2);
 
     liz.addEventListener('click', () => {
       playSound();
@@ -208,10 +207,14 @@
     move();
   }
 
-  // Create multiple bouncing lizards
-  for (let i = 0; i < 5; i++) {
-    createDvdLizard();
-  }
+  // Spawn initial lizards
+  for (let i = 0; i < 5; i++) createDvdLizard();
+
+  // Continuously spawn new lizards every 3 seconds
+  setInterval(() => {
+    const spawnCount = Math.floor(Math.random() * 3) + 1; // 1 to 3 lizards
+    for (let i = 0; i < spawnCount; i++) createDvdLizard();
+  }, 3000);
 </script>
 
 </body>
