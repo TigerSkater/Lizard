@@ -162,10 +162,26 @@
   }
 
   button.addEventListener('click', () => {
-    updateCounter(1);
-    playSound();
-  });
+  updateCounter(1);
+  playSound();
+});
 
+// Space bar activates lizard button
+document.addEventListener('keydown', (e) => {
+  const isSpace = (e.code === 'Space' || e.key === ' ');
+
+  if (isSpace) {
+    e.preventDefault();       // stop page scroll
+    if (e.repeat) return;     // optional: don't spam when holding
+
+    button.click();           // triggers your normal click logic
+
+    // press animation
+    button.classList.add('zoomed');
+    setTimeout(() => button.classList.remove('zoomed'), 80);
+  }
+});
+  
   add10Btn.addEventListener('click', () => {
     updateCounter(10);
     playSound(10);
