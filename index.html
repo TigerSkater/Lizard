@@ -47,6 +47,8 @@
     display: flex;
     gap: 10px;
     z-index: 3;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .addButtons button {
@@ -98,6 +100,32 @@
     pointer-events: none;
     transition: transform 0.3s;
   }
+
+  /* bottom-left controls */
+  #bottomLeftControls {
+    position: fixed;
+    left: 14px;
+    bottom: 14px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  #modeToggleBtn, #resetLizardsBtn {
+    background-color: #6ee7b7;
+    border: none;
+    padding: 10px 14px;
+    font-size: 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px #059669;
+  }
+
+  #resetLizardsBtn[hidden] {
+    display: none;
+  }
 </style>
 </head>
 <body>
@@ -111,17 +139,35 @@
 
 <div id="counter" aria-live="polite">Pressed: 0</div>
 
+<!-- bottom-left -->
+<div id="bottomLeftControls">
+  <button id="modeToggleBtn">Mode: Predator 🐢</button>
+  <button id="resetLizardsBtn" hidden>Reset Lizards (10)</button>
+</div>
+
 <script>
   const button = document.getElementById('lizardButton');
   const counterDisplay = document.getElementById('counter');
   const add10Btn = document.getElementById('add10');
   const autoClickBtn = document.getElementById('autoClick');
 
+  const modeToggleBtn = document.getElementById('modeToggleBtn');
+  const resetLizardsBtn = document.getElementById('resetLizardsBtn');
+
   let count = 0;
   let autoClickInterval = null;
   let autoSpeedIndex = 0;
   const autoSpeeds = [0, 2, 5, 10, 20];
+
   const lizards = [];
+
+  // MODES:
+  // "predator" = turtle spawns and kills half
+  // "growth"   = no turtle; +6 or +7 lizards per second; reset button
+  let mode = "predator";
+
+  let turtleInterval = null;
+  let growthInterval = null;
 
   // Audio pool
   const soundPoolSize = 10;
@@ -147,7 +193,7 @@
   function updateCounter(amount) {
     count += amount;
     counterDisplay.textContent = `Pressed: ${count}`;
-    showFloatingText(`+${amount}`);
+    showFloatingText(`+${amount} YAY`);
   }
 
   function showFloatingText(text) {
@@ -161,27 +207,30 @@
     setTimeout(() => span.remove(), 1000);
   }
 
-  button.addEventListener('click', () => {
-  updateCounter(1);
-  playSound();
-});
-
-// Space bar activates lizard button
-document.addEventListener('keydown', (e) => {
-  const isSpace = (e.code === 'Space' || e.key === ' ');
-
-  if (isSpace) {
-    e.preventDefault();       // stop page scroll
-    if (e.repeat) return;     // optional: don't spam when holding
-
-    button.click();           // triggers your normal click logic
-
-    // press animation
+  function pressAnimation() {
     button.classList.add('zoomed');
     setTimeout(() => button.classList.remove('zoomed'), 80);
   }
-});
-  
+
+  // --- main press logic ---
+  function handlePress() {
+    updateCounter(1);
+    playSound(1);
+  }
+
+  button.addEventListener('click', handlePress);
+
+  // Space bar activates lizard button
+  document.addEventListener('keydown', (e) => {
+    const isSpace = (e.code === 'Space' || e.key === ' ');
+    if (isSpace) {
+      e.preventDefault();
+      if (e.repeat) return;
+      button.click();
+      pressAnimation();
+    }
+  });
+
   add10Btn.addEventListener('click', () => {
     updateCounter(10);
     playSound(10);
@@ -196,13 +245,12 @@ document.addEventListener('keydown', (e) => {
     if (cps > 0) {
       autoClickInterval = setInterval(() => {
         button.click();
-        button.classList.add('zoomed');
-        setTimeout(() => button.classList.remove('zoomed'), 80);
+        pressAnimation();
       }, 1000 / cps);
     }
   });
 
-  // DVD Bouncing Lizards
+  // --- DVD Bouncing Lizards ---
   function createDvdLizard() {
     const liz = document.createElement('div');
     liz.className = 'dvdLizard';
@@ -216,12 +264,12 @@ document.addEventListener('keydown', (e) => {
     let dy = (Math.random() < 0.5 ? 1 : -1) * (2 + Math.random() * 2);
 
     liz.addEventListener('click', () => {
-      playSound();
+      playSound(1);
       updateCounter(1);
     });
 
     function move() {
-      if (!document.body.contains(liz)) return; // Stop moving if removed
+      if (!document.body.contains(liz)) return;
       x += dx;
       y += dy;
 
@@ -236,17 +284,32 @@ document.addEventListener('keydown', (e) => {
     move();
   }
 
-  // Spawn initial lizards
-  for (let i = 0; i < 10; i++) createDvdLizard();
+  function spawnLizards(n) {
+    for (let i = 0; i < n; i++) createDvdLizard();
+  }
 
-  // Respawn lizards slowly over time
-  setInterval(() => {
-    if (lizards.length < 20) {
+  function setLizardCount(target) {
+    // remove extras
+    while (lizards.length > target) {
+      const liz = lizards.pop();
+      if (liz) liz.remove();
+    }
+    // add missing
+    while (lizards.length < target) {
       createDvdLizard();
     }
+  }
+
+  // Spawn initial lizards
+  spawnLizards(10);
+
+  // Respawn lizards slowly over time (only makes sense in predator mode)
+  let respawnInterval = setInterval(() => {
+    if (mode !== "predator") return;
+    if (lizards.length < 20) createDvdLizard();
   }, 2000);
 
-  // Turtle predator
+  // --- Turtle predator ---
   function spawnTurtle() {
     const turtle = document.createElement('div');
     turtle.className = 'turtle';
@@ -273,16 +336,72 @@ document.addEventListener('keydown', (e) => {
     // Kill half the lizards
     const killCount = Math.floor(lizards.length / 2);
     for (let i = 0; i < killCount; i++) {
-      const liz = lizards.splice(Math.floor(Math.random() * lizards.length), 1)[0];
+      const idx = Math.floor(Math.random() * lizards.length);
+      const liz = lizards.splice(idx, 1)[0];
       if (liz) liz.remove();
     }
   }
 
-  // Spawn turtle every 10-20 seconds randomly
-  setInterval(() => {
-    if (Math.random() < 0.5) spawnTurtle();
-  }, 10000);
+  function startPredatorMode() {
+    stopGrowthMode();
+    resetLizardsBtn.hidden = true;
+    modeToggleBtn.textContent = "Mode: Predator 🐢";
 
+    // turtle every 10s, 50% chance (same vibe as your original)
+    if (turtleInterval) clearInterval(turtleInterval);
+    turtleInterval = setInterval(() => {
+      if (mode !== "predator") return;
+      if (Math.random() < 0.5) spawnTurtle();
+    }, 10000);
+  }
+
+  function stopPredatorMode() {
+    if (turtleInterval) {
+      clearInterval(turtleInterval);
+      turtleInterval = null;
+    }
+  }
+
+  function startGrowthMode() {
+    stopPredatorMode();
+    resetLizardsBtn.hidden = false;
+    modeToggleBtn.textContent = "Mode: Growth 📈";
+
+    // stop turtle + keep lizards growing +6 or +7 every second
+    if (growthInterval) clearInterval(growthInterval);
+    growthInterval = setInterval(() => {
+      if (mode !== "growth") return;
+      const add = (Math.random() < 0.5 ? 6 : 7);
+      spawnLizards(add);
+    }, 1000);
+  }
+
+  function stopGrowthMode() {
+    if (growthInterval) {
+      clearInterval(growthInterval);
+      growthInterval = null;
+    }
+  }
+
+  // mode switch button (bottom-left)
+  modeToggleBtn.addEventListener('click', () => {
+    mode = (mode === "predator") ? "growth" : "predator";
+    if (mode === "predator") startPredatorMode();
+    else startGrowthMode();
+  });
+
+  // reset button (only in growth mode)
+  resetLizardsBtn.addEventListener('click', () => {
+    setLizardCount(10);
+  });
+
+  // initialize predator mode
+  startPredatorMode();
+
+  // keep lizards in bounds on resize (optional nice-to-have)
+  window.addEventListener('resize', () => {
+    // nothing required; movement checks window.innerWidth/Height each frame
+  });
 </script>
 
 </body>
